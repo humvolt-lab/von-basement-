@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>VON BASEMENT</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=VT323&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --panel: #111111;
+    --border: #2a2a2a;
+    --accent: #c8a84b;
+    --accent2: #4bc8a8;
+    --accent3: #c84b6e;
+    --accent4: #7b4bc8;
+    --dim: #333333;
+    --text: #e8e0cc;
+    --textdim: #666666;
+    --on: #c8a84b;
+    --off: #1a1a1a;
+    --glow: rgba(200,168,75,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  #splash {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100;
+    gap: 32px;
+  }
+
+  #splash h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 15vw, 80px);
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(200,168,75,0.4);
+    animation: flicker 4s infinite;
+  }
+
+  #splash p {
+    font-family: 'VT323', monospace;
+    font-size: clamp(14px, 4vw, 18px);
+    color: var(--textdim);
+    letter-spacing: 0.2em;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  #init-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 5vw, 24px);
+    letter-spacing: 0.3em;
+    padding: 14px 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(200,168,75,0.1);
+  }
+
+  #init-btn:active {
+    background: rgba(200,168,75,0.1);
+    box-shadow: 0 0 30px rgba(200,168,75,0.3);
+  }
+
+  @keyframes flicker {
+    0%,95%,100% { opacity: 1; }
+    96% { opacity: 0.8; }
+    97% { opacity: 1; }
+    98% { opacity: 0.6; }
+    99% { opacity: 1; }
+  }
+
+  #app {
+    display: none;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    padding: env(safe-area-inset-top, 8px) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 8px) env(safe-area-inset-left, 0);
+  }
+
+  /* GLOBAL CONTROLS */
+  #global {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  #global-title {
+    font-family: 'VT323', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--textdim);
+    text-align: center;
+  }
+
+  .global-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .global-knob-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .global-knob-group label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--textdim);
+  }
+
+  .knob-wrap {
+    position: relative;
+    width: 36px; height: 36px;
+  }
+
+  .knob-wrap canvas {
+    width: 36px; height: 36px;
+    cursor: pointer;
+  }
+
+  .knob-val {
+    font-size: 9px;
+    color: var(--accent);
+    text-align: center;
+    font-family: 'VT323', monospace;
+  }
+
+  .seg-control {
+    display: flex;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .seg-control button {
+    flex: 1;
+    background: var(--off);
+    border: none;
+    color: var(--textdim);
+    font-family: 'VT323', monospace;
+    font-size: 11px;
+    padding: 5px 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-right: 1px solid var(--border);
+  }
+
+  .seg-control button:last-child { border-right: none; }
+
+  .seg-control button.active {
+    background: rgba(200,168,75,0.15);
+    color: var(--accent);
+  }
+
+  /* BAND PANELS */
+  #band {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .musician {
+    flex: 1;
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+
+  .musician.finding {
+    background: #0f0f0f;
+  }
+
+  .musician.locked {
+    background: #111111;
+  }
+
+  /* Scan line effect */
+  .musician::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* VU meter background */
+  .vu-bg {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 3px;
+    overflow: hidden;
+  }
+
+  .vu-bar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: var(--accent);
+    transition: height 0.05s;
+    opacity: 0.6;
+  }
+
+  /* Symbol */
+  .symbol {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    opacity: 0.3;
+    transition: opacity 0.5s;
+  }
+
+  .musician.locked .symbol { opacity: 1; }
+  .musician.finding .symbol { opacity: 0.6; animation: pulse-sym 0.8s infinite; }
+
+  @keyframes pulse-sym {
+    0%,100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  .symbol svg { width: 100%; height: 100%; }
+
+  /* Name + status */
+  .musician-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .musician-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(16px, 4.5vw, 22px);
+    letter-spacing: 0.15em;
+    line-height: 1;
+  }
+
+  .musician-status {
+    font-family: 'VT323', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--textdim);
+    height: 14px;
+    overflow: hidden;
+  }
+
+  /* Complexity */
+  .complexity-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .complexity-group label {
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    color: var(--textdim);
+  }
+
+  .complexity-btns {
+    display: flex;
+    gap: 3px;
+  }
+
+  .cplx-btn {
+    width: 22px; height: 22px;
+    border: 1px solid var(--dim);
+    background: transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-size: 10px;
+    color: var(--textdim);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .cplx-btn.active {
+    border-color: var(--accent);
+    background: rgba(200,168,75,0.15);
+    color: var(--accent);
+  }
+
+  /* Play/Stop */
+  .play-btn {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 1.5px solid var(--dim);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .play-btn.playing {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(200,168,75,0.3);
+  }
+
+  .play-btn svg { transition: all 0.2s; }
+
+  /* Color theming per musician */
+  .musician[data-m="drums"] { --mc: var(--accent); }
+  .musician[data-m="bass"]  { --mc: var(--accent2); }
+  .musician[data-m="keys"]  { --mc: var(--accent3); }
+  .musician[data-m="digger"]{ --mc: var(--accent4); }
+
+  .musician[data-m="drums"] .musician-name  { color: var(--accent); }
+  .musician[data-m="bass"]  .musician-name  { color: var(--accent2); }
+  .musician[data-m="keys"]  .musician-name  { color: var(--accent3); }
+  .musician[data-m="digger"].musician-name  { color: var(--accent4); }
+
+  .musician[data-m="drums"]  .play-btn.playing { border-color: var(--accent);  box-shadow: 0 0 12px rgba(200,168,75,0.3); }
+  .musician[data-m="bass"]   .play-btn.playing { border-color: var(--accent2); box-shadow: 0 0 12px rgba(75,200,168,0.3); }
+  .musician[data-m="keys"]   .play-btn.playing { border-color: var(--accent3); box-shadow: 0 0 12px rgba(200,75,110,0.3); }
+  .musician[data-m="digger"] .play-btn.playing { border-color: var(--accent4); box-shadow: 0 0 12px rgba(123,75,200,0.3); }
+
+  .musician[data-m="drums"]  .cplx-btn.active { border-color: var(--accent);  background: rgba(200,168,75,0.15);  color: var(--accent); }
+  .musician[data-m="bass"]   .cplx-btn.active { border-color: var(--accent2); background: rgba(75,200,168,0.15);  color: var(--accent2); }
+  .musician[data-m="keys"]   .cplx-btn.active { border-color: var(--accent3); background: rgba(200,75,110,0.15);  color: var(--accent3); }
+  .musician[data-m="digger"] .cplx-btn.active { border-color: var(--accent4); background: rgba(123,75,200,0.15);  color: var(--accent4); }
+
+  .musician[data-m="drums"]  .symbol { color: var(--accent); }
+  .musician[data-m="bass"]   .symbol { color: var(--accent2); }
+  .musician[data-m="keys"]   .symbol { color: var(--accent3); }
+  .musician[data-m="digger"] .symbol { color: var(--accent4); }
+
+  .musician[data-m="drums"]  .vu-bar { background: var(--accent); }
+  .musician[data-m="bass"]   .vu-bar { background: var(--accent2); }
+  .musician[data-m="keys"]   .vu-bar { background: var(--accent3); }
+  .musician[data-m="digger"] .vu-bar { background: var(--accent4); }
+
+  /* Waveform canvas per musician */
+  .wave-canvas {
+    position: absolute;
+    bottom: 0; left: 56px; right: 50px;
+    height: 20px;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+
+  .musician.locked .wave-canvas { opacity: 0.25; }
+  .musician.finding .wave-canvas { opacity: 0.1; }
+
+  /* Scrolling status text */
+  @keyframes scroll-status {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  .scrolling {
+    display: inline-block;
+    animation: scroll-status 8s linear infinite;
+    white-space: nowrap;
+  }
+
+  /* Reinterpret button */
+  .reint-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--dim);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--textdim);
+    font-size: 16px;
+    transition: all 0.15s;
+    margin-left: -4px;
+  }
+
+  .reint-btn:active {
+    transform: rotate(180deg) scale(0.9);
+  }
+
+  .musician[data-m="drums"]  .reint-btn:active { color: var(--accent);  border-color: var(--accent); }
+  .musician[data-m="bass"]   .reint-btn:active { color: var(--accent2); border-color: var(--accent2); }
+  .musician[data-m="keys"]   .reint-btn:active { color: var(--accent3); border-color: var(--accent3); }
+  .musician[data-m="digger"] .reint-btn:active { color: var(--accent4); border-color: var(--accent4); }
+
+  .reint-btn.flash {
+    color: var(--mc);
+    border-color: var(--mc);
+    transform: rotate(180deg);
+  }
+
+  /* Tweak / randomize sound button */
+  .tweak-btn {
+    width: 34px; height: 34px;
+    border-radius: 4px;
+    border: 1px solid var(--dim);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--textdim);
+    font-size: 13px;
+    font-family: 'Share Tech Mono', monospace;
+    transition: all 0.15s;
+    margin-left: -4px;
+    letter-spacing: -0.05em;
+  }
+
+  .tweak-btn:active { transform: scale(0.88); }
+
+  .musician[data-m="drums"]  .tweak-btn:active { color: var(--accent);  border-color: var(--accent);  background: rgba(200,168,75,0.1); }
+  .musician[data-m="bass"]   .tweak-btn:active { color: var(--accent2); border-color: var(--accent2); background: rgba(75,200,168,0.1); }
+  .musician[data-m="keys"]   .tweak-btn:active { color: var(--accent3); border-color: var(--accent3); background: rgba(200,75,110,0.1); }
+  .musician[data-m="digger"] .tweak-btn:active { color: var(--accent4); border-color: var(--accent4); background: rgba(123,75,200,0.1); }
+
+  .tweak-btn.flash {
+    color: var(--mc);
+    border-color: var(--mc);
+    background: rgba(255,255,255,0.05);
+    transform: scale(0.88);
+  }
+
+  /* Key grid */
+  .key-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 2px;
+    width: 100%;
+  }
+
+  .key-btn {
+    background: #1c1c1c;
+    border: 1px solid var(--border);
+    color: var(--textdim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    padding: 5px 0;
+    cursor: pointer;
+    transition: all 0.12s;
+    border-radius: 2px;
+    letter-spacing: 0;
+  }
+
+  .key-btn.black {
+    background: #111;
+    color: #444;
+  }
+
+  .key-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    font-weight: bold;
+  }
+
+  .key-btn:active { transform: scale(0.9); }
+
+  /* Mode grid */
+  .mode-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    width: 100%;
+    margin-top: 3px;
+  }
+
+  .mode-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--textdim);
+    font-family: 'VT323', monospace;
+    font-size: 11px;
+    padding: 3px 0;
+    cursor: pointer;
+    transition: all 0.12s;
+    border-radius: 2px;
+  }
+
+  .mode-btn.active {
+    background: rgba(200,168,75,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .mode-btn:active { transform: scale(0.9); }
+
+  /* Global fx row */
+  .fx-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--textdim);
+    text-align: center;
+    margin-bottom: 1px;
+  }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <h1>VON BASEMENT</h1>
+  <button id="init-btn" onclick="initAudio()">ENTER</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- GLOBAL CONTROLS -->
+  <div id="global">
+    <div id="global-title">— GLOBAL CONTROLS —</div>
+    <div class="global-row">
+      <!-- Tempo -->
+      <div class="global-knob-group">
+        <label>TEMPO</label>
+        <div class="knob-wrap">
+          <canvas id="knob-tempo" width="72" height="72"></canvas>
+        </div>
+        <div class="knob-val" id="val-tempo">120</div>
+      </div>
+      <!-- Time Sig -->
+      <div class="global-knob-group" style="flex:2">
+        <label>TIME SIG</label>
+        <div class="seg-control" id="timesig-ctrl">
+          <button onclick="setTimeSig('4/4')" class="active">4/4</button>
+          <button onclick="setTimeSig('5/4')">5/4</button>
+          <button onclick="setTimeSig('6/4')">6/4</button>
+          <button onclick="setTimeSig('6/8')">6/8</button>
+          <button onclick="setTimeSig('7/8')">7/8</button>
+          <button onclick="setTimeSig('11/8')">11/8</button>
+        </div>
+      </div>
+      <!-- Swing -->
+      <div class="global-knob-group">
+        <label>SWING</label>
+        <div class="knob-wrap">
+          <canvas id="knob-swing" width="72" height="72"></canvas>
+        </div>
+        <div class="knob-val" id="val-swing">50%</div>
+      </div>
+    </div>
+    <div class="global-row">
+      <!-- Key + Mode -->
+      <div class="global-knob-group" style="flex:3">
+        <label>KEY & MODE</label>
+        <div class="key-grid" id="key-grid">
+          <button class="key-btn active" onclick="setKey(0)">C</button>
+          <button class="key-btn black" onclick="setKey(1)">C#</button>
+          <button class="key-btn" onclick="setKey(2)">D</button>
+          <button class="key-btn black" onclick="setKey(3)">D#</button>
+          <button class="key-btn" onclick="setKey(4)">E</button>
+          <button class="key-btn" onclick="setKey(5)">F</button>
+          <button class="key-btn black" onclick="setKey(6)">F#</button>
+          <button class="key-btn" onclick="setKey(7)">G</button>
+          <button class="key-btn black" onclick="setKey(8)">G#</button>
+          <button class="key-btn" onclick="setKey(9)">A</button>
+          <button class="key-btn black" onclick="setKey(10)">A#</button>
+          <button class="key-btn" onclick="setKey(11)">B</button>
+        </div>
+        <div class="mode-grid" id="mode-grid">
+          <button class="mode-btn active" onclick="setMode('minor')">MIN</button>
+          <button class="mode-btn" onclick="setMode('major')">MAJ</button>
+          <button class="mode-btn" onclick="setMode('dorian')">DOR</button>
+          <button class="mode-btn" onclick="setMode('phrygian')">PHR</button>
+          <button class="mode-btn" onclick="setMode('mixolydian')">MIX</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BAND -->
+  <div id="band">
+
+    <!-- DRUMS -->
+    <div class="musician" data-m="drums" id="m-drums">
+      <div class="vu-bg"><div class="vu-bar" id="vu-drums" style="height:0%"></div></div>
+      <canvas class="wave-canvas" id="wave-drums"></canvas>
+      <div class="symbol">
+        <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Single vertical line with circle — kick drum side view -->
+          <circle cx="22" cy="12" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="22" y1="19" x2="22" y2="38" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="14" y1="38" x2="30" y2="38" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="16" y1="34" x2="22" y2="38" stroke="currentColor" stroke-width="1"/>
+          <line x1="28" y1="34" x2="22" y2="38" stroke="currentColor" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="musician-info">
+        <div class="musician-name">DRUMS</div>
+        <div class="musician-status" id="status-drums">— OFFLINE —</div>
+      </div>
+      <div class="complexity-group">
+        <label>COMPLEXITY</label>
+        <div class="complexity-btns">
+          <button class="cplx-btn active" onclick="setComplexity('drums',1)">I</button>
+          <button class="cplx-btn" onclick="setComplexity('drums',2)">II</button>
+          <button class="cplx-btn" onclick="setComplexity('drums',3)">III</button>
+        </div>
+      </div>
+      <button class="reint-btn" id="reint-drums" onclick="reinterpret('drums')" title="Reinterpret">↻</button>
+      <button class="tweak-btn" id="tweak-drums" onclick="tweakSound('drums')" title="Randomize Sound">◈</button>
+      <button class="play-btn" id="btn-drums" onclick="toggleMusician('drums')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <polygon id="icon-drums" points="5,2 14,8 5,14" fill="#666"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- BASS -->
+    <div class="musician" data-m="bass" id="m-bass">
+      <div class="vu-bg"><div class="vu-bar" id="vu-bass" style="height:0%"></div></div>
+      <canvas class="wave-canvas" id="wave-bass"></canvas>
+      <div class="symbol">
+        <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Omega / wave -->
+          <path d="M8 32 Q8 16 22 16 Q36 16 36 32" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <line x1="6" y1="32" x2="14" y2="32" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="30" y1="32" x2="38" y2="32" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="musician-info">
+        <div class="musician-name">BASS</div>
+        <div class="musician-status" id="status-bass">— OFFLINE —</div>
+      </div>
+      <div class="complexity-group">
+        <label>COMPLEXITY</label>
+        <div class="complexity-btns">
+          <button class="cplx-btn active" onclick="setComplexity('bass',1)">I</button>
+          <button class="cplx-btn" onclick="setComplexity('bass',2)">II</button>
+          <button class="cplx-btn" onclick="setComplexity('bass',3)">III</button>
+        </div>
+      </div>
+      <button class="reint-btn" id="reint-bass" onclick="reinterpret('bass')" title="Reinterpret">↻</button>
+      <button class="tweak-btn" id="tweak-bass" onclick="tweakSound('bass')" title="Randomize Sound">◈</button>
+      <button class="play-btn" id="btn-bass" onclick="toggleMusician('bass')">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <polygon id="icon-bass" points="5,2 14,8 5,14" fill="#666"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- KEYS -->
+    <div class="musician" data-m="keys" id="m-keys">
+      <div class="vu-bg"><div class="vu-bar" id="vu-keys" style="height:0%"></div></div>
+      <canvas class="wave-canvas" id="wave-keys"></canvas>
+      <div class="symbol">
+        <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Lightning bolt / single note on staff -->
+          <line x1="10" y1="22" x2="34" y2="22" stroke="currentColor" stroke-width="1"/>
+          <path d="M26 10 L18 22 L26 22 L18 34" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="musician-info">
+        <div class="musician-name">KEYS</div>
+        <div class="musician-status" id="status-keys">— OFFLINE —</div>
+      </div>
+      <div class="complexity-group">
+        <label>COMPLEXITY</label>
+        <div class="complexity-btns">
+          <button class="cplx-btn active" onclick="setComplexity('keys',1)">I</button>
+          <button class="cplx-btn" onclick="setComplexity('keys',2)">II</button>
+          <button class="cplx-btn" onclick="setComplexity('keys',3)">III</button>
+        </div>
+      </div>
+      <button class="reint-btn" id="reint-keys" onclick="reinterpret('keys')" title="Reinterpret">↻</button>
+      <button class="tweak-btn" id="tweak-keys" onclick="tweakSound('keys')" title="Randomize Sound">◈</button>
+      <button class="play-btn" id="btn-keys" onclick="toggleMusician('keys')">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <polygon id="icon-keys" points="5,2 14,8 5,14" fill="#666"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- DIGGER -->
+    <div class="musician" data-m="digger" id="m-digger">
+      <div class="vu-bg"><div class="vu-bar" id="vu-digger" style="height:0%"></div></div>
+      <canvas class="wave-canvas" id="wave-digger"></canvas>
+      <div class="symbol">
+        <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Spiral — record groove -->
+          <path d="M22 22 
+            m-2 0 a2 2 0 1 1 4 0
+            m-7 0 a7 7 0 1 1 14 0
+            m-11 0 a11 11 0 1 1 22 0" 
+            stroke="currentColor" stroke-width="1.2" fill="none"/>
+          <circle cx="22" cy="22" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="musician-info">
+        <div class="musician-name">DIGGER</div>
+        <div class="musician-status" id="status-digger">— OFFLINE —</div>
+      </div>
+      <div class="complexity-group">
+        <label>DENSITY</label>
+        <div class="complexity-btns">
+          <button class="cplx-btn active" onclick="setComplexity('digger',1)">I</button>
+          <button class="cplx-btn" onclick="setComplexity('digger',2)">II</button>
+          <button class="cplx-btn" onclick="setComplexity('digger',3)">III</button>
+        </div>
+      </div>
+      <button class="reint-btn" id="reint-digger" onclick="reinterpret('digger')" title="Reinterpret">↻</button>
+      <button class="tweak-btn" id="tweak-digger" onclick="tweakSound('digger')" title="Randomize Sound">◈</button>
+      <button class="play-btn" id="btn-digger" onclick="toggleMusician('digger')">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <polygon id="icon-digger" points="5,2 14,8 5,14" fill="#666"/>
+        </svg>
+      </button>
+    </div>
+
+  </div><!-- /band -->
+</div><!-- /app -->
+
+<script>
+// ============================================================
+// AUDIO ENGINE
+// ============================================================
+let ctx, masterGain, reverbNode, convolver, lofiFilter, wobbleLFO, wobbleGain;
+let analyserNodes = {};
+
+const state = {
+  tempo: 120,
+  timeSig: { num: 4, den: 4 },
+  key: 0, // semitones from C
+  reverb: 0.3,
+  wobble: 0.2,
+  lofi: 0.4,
+  swing: 0.5,
+  musicians: {
+    drums:  { playing: false, complexity: 1, state: 'off' },
+    bass:   { playing: false, complexity: 1, state: 'off' },
+    keys:   { playing: false, complexity: 1, state: 'off' },
+    digger: { playing: false, complexity: 1, state: 'off' },
+  }
+};
+
+const KEYS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+const MODES = {
+  minor:      [0, 2, 3, 5, 7, 8, 10],  // natural minor / aeolian
+  major:      [0, 2, 4, 5, 7, 9, 11],  // ionian
+  dorian:     [0, 2, 3, 5, 7, 9, 10],  // minor with raised 6th — jazzy
+  phrygian:   [0, 1, 3, 5, 7, 8, 10],  // dark, spanish
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],  // major with flat 7 — bluesy
+};
+
+let SCALE_INTERVALS = MODES.minor;
+state.mode = 'minor';
+
+function setKey(semitone) {
+  state.key = semitone;
+  document.querySelectorAll('.key-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === semitone);
+  });
+  generateBassPattern();
+  generateKeysPattern();
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  SCALE_INTERVALS = MODES[mode];
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === mode.slice(0,3).toLowerCase() ||
+      (mode === 'minor' && b.textContent === 'MIN') ||
+      (mode === 'major' && b.textContent === 'MAJ') ||
+      (mode === 'dorian' && b.textContent === 'DOR') ||
+      (mode === 'phrygian' && b.textContent === 'PHR') ||
+      (mode === 'mixolydian' && b.textContent === 'MIX')
+    );
+  });
+  generateBassPattern();
+  generateKeysPattern();
+}
+
+function midiToFreq(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+function noteInScale(octave, degree) {
+  return 48 + state.key + octave * 12 + SCALE_INTERVALS[degree % SCALE_INTERVALS.length];
+}
+
+async function initAudio() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  await ctx.resume();
+
+  // Master chain
+  masterGain = ctx.createGain();
+  masterGain.gain.value = 0.7;
+
+  // Lo-fi filter
+  lofiFilter = ctx.createBiquadFilter();
+  lofiFilter.type = 'lowpass';
+  lofiFilter.frequency.value = 8000;
+
+  // Reverb (simple convolver with generated IR)
+  convolver = ctx.createConvolver();
+  convolver.buffer = makeReverbIR(ctx, 2.5);
+  const reverbWet = ctx.createGain();
+  reverbWet.gain.value = state.reverb;
+  const reverbDry = ctx.createGain();
+  reverbDry.gain.value = 1 - state.reverb * 0.5;
+
+  // Wobble LFO
+  wobbleLFO = ctx.createOscillator();
+  wobbleLFO.frequency.value = 0.3;
+  wobbleLFO.type = 'sine';
+  wobbleGain = ctx.createGain();
+  wobbleGain.gain.value = state.wobble * 8;
+  wobbleLFO.connect(wobbleGain);
+  wobbleGain.connect(lofiFilter.frequency);
+  wobbleLFO.start();
+
+  // Chain: lofiFilter -> dry+wet -> master -> destination
+  lofiFilter.connect(reverbDry);
+  lofiFilter.connect(convolver);
+  convolver.connect(reverbWet);
+  reverbDry.connect(masterGain);
+  reverbWet.connect(masterGain);
+  masterGain.connect(ctx.destination);
+
+  // Analysers per musician
+  ['drums','bass','keys','digger'].forEach(m => {
+    const a = ctx.createAnalyser();
+    a.fftSize = 256;
+    a.connect(lofiFilter);
+    analyserNodes[m] = a;
+  });
+
+  document.getElementById('splash').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  initKnobs();
+  startVisuals();
+}
+
+function makeReverbIR(ctx, duration) {
+  const rate = ctx.sampleRate;
+  const length = rate * duration;
+  const buf = ctx.createBuffer(2, length, rate);
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < length; i++) {
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.5);
+    }
+  }
+  return buf;
+}
+
+// ============================================================
+// SCHEDULER
+// ============================================================
+let schedulerTimer = null;
+let currentBeat = 0;
+let nextBeatTime = 0;
+const LOOK_AHEAD = 0.1;
+const SCHEDULE_INTERVAL = 50;
+
+let drumSchedule = [], bassSchedule = [], keysSchedule = [];
+let drumNotes = [], bassNotes = [], keysNotes = [];
+
+function startScheduler() {
+  if (schedulerTimer) return;
+  nextBeatTime = ctx.currentTime + 0.05;
+  currentBeat = 0;
+  schedulerTimer = setInterval(scheduleTick, SCHEDULE_INTERVAL);
+}
+
+function stopSchedulerIfNone() {
+  const any = Object.values(state.musicians).some(m => m.playing);
+  if (!any && schedulerTimer) {
+    clearInterval(schedulerTimer);
+    schedulerTimer = null;
+  }
+}
+
+function beatDuration() {
+  // For /8 time sigs, denominator 8 means eighth notes
+  const bpm = state.tempo;
+  const den = state.timeSig.den;
+  // Quarter note duration
+  const q = 60 / bpm;
+  return den === 8 ? q / 2 : q;
+}
+
+function beatsPerMeasure() { return state.timeSig.num; }
+
+function scheduleTick() {
+  const bd = beatDuration();
+  while (nextBeatTime < ctx.currentTime + LOOK_AHEAD) {
+    try {
+      const beat = currentBeat % beatsPerMeasure();
+      const swing = (currentBeat % 2 === 1) ? (state.swing - 0.5) * bd * 0.4 : 0;
+      const t = nextBeatTime + swing;
+
+      if (state.musicians.drums.playing && state.musicians.drums.state === 'locked') {
+        scheduleDrums(beat, t, bd);
+      }
+      if (state.musicians.bass.playing && state.musicians.bass.state === 'locked') {
+        scheduleBass(beat, t, bd);
+      }
+      if (state.musicians.keys.playing && state.musicians.keys.state === 'locked') {
+        scheduleKeys(beat, t, bd);
+      }
+    } catch(e) {
+      console.warn('Scheduler tick error:', e.message);
+    }
+    nextBeatTime += bd;
+    currentBeat++;
+  }
+}
+
+// ============================================================
+// DRUM SYNTHESIS (808-style)
+// ============================================================
+function make808Kick(t, gain=0.9) {
+  const dest = analyserNodes.drums;
+  const p = instrParams.drums;
+  const safeT = Math.max(t, ctx.currentTime + 0.001);
+  const osc = ctx.createOscillator();
+  const env = ctx.createGain();
+  const dist = ctx.createWaveShaper();
+  dist.curve = makeDistCurve(p.distAmount);
+  osc.connect(dist);
+  dist.connect(env);
+  env.connect(dest);
+  osc.type = 'sine';
+  osc.frequency.value = p.kickPitch * 0.28;
+  env.gain.setValueAtTime(gain, safeT);
+  env.gain.exponentialRampToValueAtTime(0.0001, safeT + p.kickDecay * 0.8);
+  osc.start(safeT); osc.stop(safeT + p.kickDecay + 0.05);
+}
+
+function make808Snare(t, gain=0.5) {
+  const dest = analyserNodes.drums;
+  const p = instrParams.drums;
+  const safeT = Math.max(t, ctx.currentTime + 0.001);
+  const osc = ctx.createOscillator();
+  const env1 = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.value = 180;
+  osc.connect(env1); env1.connect(dest);
+  env1.gain.setValueAtTime(gain * 0.6, safeT);
+  env1.gain.exponentialRampToValueAtTime(0.0001, safeT + p.snareSnap);
+  osc.start(safeT); osc.stop(safeT + p.snareSnap + 0.05);
+  const noise = makeNoise(ctx, p.snareSnap + 0.05);
+  const noiseEnv = ctx.createGain();
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = 2400;
+  noiseFilter.Q.value = 0.8;
+  noise.connect(noiseFilter); noiseFilter.connect(noiseEnv); noiseEnv.connect(dest);
+  noiseEnv.gain.setValueAtTime(gain, safeT);
+  noiseEnv.gain.exponentialRampToValueAtTime(0.0001, safeT + p.snareSnap + 0.03);
+  noise.start(safeT); noise.stop(safeT + p.snareSnap + 0.1);
+}
+
+function make808Hat(t, open=false, gain=0.3) {
+  const dest = analyserNodes.drums;
+  const safeT = Math.max(t, ctx.currentTime + 0.001);
+  const noise = makeNoise(ctx, 0.15);
+  const env = ctx.createGain();
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'highpass';
+  filt.frequency.value = 7000;
+  noise.connect(filt); filt.connect(env); env.connect(dest);
+  const dur = open ? 0.3 : 0.08;
+  env.gain.setValueAtTime(gain, safeT);
+  env.gain.exponentialRampToValueAtTime(0.0001, safeT + dur);
+  noise.start(safeT); noise.stop(safeT + dur + 0.05);
+}
+
+function makeNoise(ctx, dur) {
+  const bufSize = ctx.sampleRate * (dur + 0.1);
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  return src;
+}
+
+function makeDistCurve(amount) {
+  const n = 256, curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = i * 2 / n - 1;
+    curve[i] = (Math.PI + amount) * x / (Math.PI + amount * Math.abs(x));
+  }
+  return curve;
+}
+
+function scheduleDrums(beat, t, bd) {
+  const c = state.musicians.drums.complexity;
+  const bpm = beatsPerMeasure();
+
+  // If reroll flagged, pick a random variant this bar
+  let patIdx = c - 1;
+  if (state.musicians.drums._rerollIdx !== undefined) {
+    patIdx = state.musicians.drums._rerollIdx;
+    if (beat === beatsPerMeasure() - 1) delete state.musicians.drums._rerollIdx; // clear after one full bar
+  }
+
+  // Kick patterns — 0,1,2 = complexity defaults; 3,4 = reroll bonus grooves
+  const kickPatterns = [
+    [1,0,0,0, 1,0,0,0], // 0: simple
+    [1,0,0,1, 0,0,1,0], // 1: medium
+    [1,0,1,0, 0,1,0,1], // 2: complex
+    [1,0,0,0, 0,0,1,0], // 3: syncopated
+    [1,1,0,0, 1,0,0,1], // 4: driving
+  ];
+  const kickPat = kickPatterns[Math.min(patIdx, kickPatterns.length - 1)];
+
+  // Map beat to pattern position (support non-4/4)
+  const pos = beat % kickPat.length;
+  if (kickPat[pos]) make808Kick(t, 0.85);
+
+  // Snare on 2 and 4 (in 4/4) or adjusted
+  const snareBeats = [2, bpm-1];
+  if (snareBeats.includes(beat % bpm)) make808Snare(t, 0.5);
+
+  // Hats — density controlled by instrParams
+  const hd = instrParams.drums.hatDensity;
+  if (c >= 1) make808Hat(t, false, 0.15 + hd * 0.1);
+  if (hd > 0.3 && Math.random() < hd) {
+    make808Hat(t + bd * 0.5, false, 0.12);
+  }
+  if (hd > 0.6 && Math.random() < hd * 0.6) {
+    make808Hat(t + bd * 0.75, false, 0.08);
+  }
+  if (beat === bpm - 1 && Math.random() < hd * 0.6) make808Hat(t, true, 0.2 + hd * 0.1);
+}
+
+// ============================================================
+// BASS SYNTHESIS (double saw arp)
+// ============================================================
+let bassPattern = [];
+let bassPatternIdx = 0;
+
+function generateBassPattern() {
+  const c = state.musicians.bass.complexity;
+  const len = Math.max(1, beatsPerMeasure());
+  bassPattern = [];
+  for (let i = 0; i < len; i++) {
+    if (c === 1) {
+      const degree = i === 0 ? 0 : (i === Math.floor(len/2) ? 4 : -1);
+      bassPattern.push(degree);
+    } else if (c === 2) {
+      const degrees = [0, 2, 4, 0, 3, 4];
+      bassPattern.push(degrees[i % degrees.length]);
+    } else {
+      const degrees = [0, 4, 2, 6, 1, 5, 3, 4];
+      bassPattern.push(degrees[i % degrees.length]);
+    }
+  }
+  // Safety: ensure never empty
+  if (bassPattern.length === 0) bassPattern = [0];
+}
+
+function makeDoubleSaw(midi, t, dur, gain=0.4) {
+  try {
+    const dest = analyserNodes.bass;
+    const p = instrParams.bass;
+    const rawFreq = midiToFreq(midi);
+    if (!isFinite(rawFreq) || rawFreq <= 0) return; // bail before touching any AudioParam
+    const freq = Math.max(30, rawFreq);
+    const now = ctx.currentTime;
+    const safeT = Math.max(t, now + 0.005);
+    const maxFreq = (ctx.sampleRate / 2) * 0.9;
+
+    const env = ctx.createGain();
+    const bassFilter = ctx.createBiquadFilter();
+    bassFilter.type = 'lowpass';
+    bassFilter.frequency.value = Math.min(Math.max(freq * p.filterMult, 80), maxFreq);
+    bassFilter.Q.value = 0.5;
+    env.connect(bassFilter);
+    bassFilter.connect(dest);
+
+    // Detune via frequency ratio — Safari-safe, no osc.detune
+    const spread = Math.pow(2, Math.max(1, p.detune) / 2400);
+    [freq * spread, freq / spread].forEach(f => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sawtooth';
+      osc.frequency.value = Math.min(Math.max(f, 20), maxFreq);
+      const og = ctx.createGain();
+      og.gain.value = 0.5;
+      osc.connect(og);
+      og.connect(env);
+      osc.start(safeT);
+      osc.stop(safeT + dur + 0.1);
+    });
+
+    // Envelope — only setValueAtTime + exponentialRamp, strictly ordered
+    const t1 = safeT;
+    const t2 = safeT + 0.025;          // attack end
+    const t3 = safeT + Math.max(dur * 0.75, 0.05); // hold end
+    const t4 = safeT + Math.max(dur, 0.08);         // release end
+
+    env.gain.cancelScheduledValues(t1);
+    env.gain.setValueAtTime(0.0001, t1);
+    env.gain.setValueAtTime(gain,   t2);
+    env.gain.setValueAtTime(gain,   t3);
+    env.gain.exponentialRampToValueAtTime(0.0001, t4);
+  } catch(e) {
+    console.warn('Bass synth error:', e.message);
+  }
+}
+
+function scheduleBass(beat, t, bd) {
+  try {
+    if (beat === 0 || bassPattern.length === 0) generateBassPattern();
+    const deg = bassPattern[beat % bassPattern.length];
+    if (deg === undefined || deg === -1) return;
+    const raw = noteInScale(0, deg) - 12;
+    const midi = Math.max(28, isFinite(raw) ? raw : 36);
+    const freq = midiToFreq(midi);
+    if (!isFinite(freq) || freq <= 0) return;
+    makeDoubleSaw(midi, t, bd * 0.85);
+  } catch(e) {
+    console.warn('scheduleBass error:', e.message);
+  }
+}
+
+// ============================================================
+// KEYS SYNTHESIS (Rhodes-style e-piano)
+// ============================================================
+function makeRhodes(midi, t, dur, gain=0.3) {
+  const dest = analyserNodes.keys;
+  const p = instrParams.keys;
+  const freq = midiToFreq(midi);
+  const safeT = Math.max(t, ctx.currentTime + 0.001);
+  const maxFreq = ctx.sampleRate * 0.45;
+
+  const carrier = ctx.createOscillator();
+  const modulator = ctx.createOscillator();
+  const modGain = ctx.createGain();
+  const ampEnv = ctx.createGain();
+  const trem = ctx.createOscillator();
+  const tremGain = ctx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.value = Math.min(freq, maxFreq);
+  modulator.type = 'sine';
+  modulator.frequency.value = Math.min(freq * p.modRatio, maxFreq);
+  modGain.gain.value = freq * p.modDepth;
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+  carrier.connect(ampEnv);
+  ampEnv.connect(dest);
+
+  trem.type = 'sine';
+  trem.frequency.value = p.tremRate;
+  tremGain.gain.value = p.tremDepth;
+  trem.connect(tremGain);
+  tremGain.connect(ampEnv.gain);
+
+  const noteDur = Math.min(dur * p.noteLength, 2);
+  ampEnv.gain.setValueAtTime(gain, safeT);
+  ampEnv.gain.exponentialRampToValueAtTime(gain * 0.3, safeT + 0.3);
+  ampEnv.gain.exponentialRampToValueAtTime(0.0001, safeT + noteDur);
+
+  carrier.start(safeT);   carrier.stop(safeT + noteDur + 0.05);
+  modulator.start(safeT); modulator.stop(safeT + noteDur + 0.05);
+  trem.start(safeT);      trem.stop(safeT + noteDur + 0.05);
+}
+
+let keysPattern = [];
+
+function generateKeysPattern() {
+  const c = state.musicians.keys.complexity;
+  const len = beatsPerMeasure();
+  keysPattern = [];
+  // Keys plays chords / comping — generate sparse pattern
+  for (let i = 0; i < len; i++) {
+    if (c === 1) {
+      // Just root + third on beats 1 and 3
+      keysPattern.push((i === 0 || i === Math.floor(len/2)) ? [0, 2] : null);
+    } else if (c === 2) {
+      // Comp on offbeats sometimes
+      const plays = Math.random() < 0.6;
+      keysPattern.push(plays ? [0, 2, 4] : null);
+    } else {
+      // Dense jazz voicings
+      const plays = Math.random() < 0.8;
+      const deg = Math.floor(Math.random() * 3);
+      keysPattern.push(plays ? [deg, deg+2, deg+4, deg+6] : null);
+    }
+  }
+}
+
+function scheduleKeys(beat, t, bd) {
+  if (beat === 0) generateKeysPattern();
+  const chord = keysPattern[beat % keysPattern.length];
+  if (!chord) return;
+  chord.forEach((deg, i) => {
+    const oct = i >= 3 ? 2 : (i >= 1 ? 2 : 2);
+    const midi = noteInScale(oct, deg);
+    makeRhodes(midi, t + i * 0.015, bd, 0.2 - i * 0.02);
+  });
+}
+
+// ============================================================
+// DIGGER — Wikimedia Commons field recordings + synthesized fallback
+// Uses fetch() + decodeAudioData which bypasses iOS Safari CORS issues
+// ============================================================
+
+const WIKI_CRATE = [
+  { label: 'CITY SUNDAY',  url: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Sunday_in_the_city_street_noise3.ogg' },
+  { label: 'CAMPFIRE',     url: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Campfire_sound_ambience.ogg' },
+  { label: 'RESTAURANT',   url: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/Restaurant_ambience.ogg' },
+  { label: 'SHOWER',       url: 'https://upload.wikimedia.org/wikipedia/commons/a/a8/Shower_Sound_Ambience.ogg' },
+  { label: 'DAWN BIRDS',   url: 'https://upload.wikimedia.org/wikipedia/commons/0/0a/20090610_0_ambience.ogg' },
+  { label: 'WINDY WOODS',  url: 'https://upload.wikimedia.org/wikipedia/commons/a/a3/Bourne_woods_windy_2020-05-05_0757.mp3' },
+  { label: 'RAIN WOODS',   url: 'https://upload.wikimedia.org/wikipedia/commons/e/ec/Bourne_woods_rain_2020-05-10_0804.mp3' },
+  { label: 'GALLERIA',     url: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Chris_Zabriskie_-_05_-_The_49th_Street_Galleria.ogg' },
+  { label: 'DIVIDER',      url: 'https://upload.wikimedia.org/wikipedia/commons/c/c3/Chris_Zabriskie_-_06_-_Divider.ogg' },
+  { label: 'CYLINDER SIX', url: 'https://upload.wikimedia.org/wikipedia/commons/c/cd/Chris_Zabriskie_-_06_-_Cylinder_Six.ogg' },
+];
+
+let diggerInterval    = null;
+let diggerGain        = null;
+let currentDiggerNode = null;
+let diggerMode        = 'synth';
+let currentWikiIdx    = -1;
+let diggerFetchAbort  = null;
+
+// ---- WIKIMEDIA FETCH + DECODE ----
+
+async function tryFetchWikiRecord(idx) {
+  if (!state.musicians.digger.playing) return;
+  const entry = WIKI_CRATE[idx];
+  if (!entry) { fallbackToSynth(); return; }
+
+  setStatus('digger', '⊙ ' + entry.label + '...');
+
+  // Abort any in-flight fetch
+  if (diggerFetchAbort) diggerFetchAbort.abort();
+  diggerFetchAbort = new AbortController();
+
+  try {
+    const resp = await fetch(entry.url, {
+      signal: diggerFetchAbort.signal,
+      // No credentials, no mode override — plain fetch, CORS headers on upload.wikimedia.org handle it
+    });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+    const arrayBuf = await resp.arrayBuffer();
+    if (!state.musicians.digger.playing) return; // bailed while fetching
+
+    const audioBuf = await ctx.decodeAudioData(arrayBuf);
+    if (!state.musicians.digger.playing) return;
+
+    // Stop existing node
+    if (currentDiggerNode) { try { currentDiggerNode.stop(); } catch(e){} }
+
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.loop = true; // loop so it plays continuously
+
+    // Route through filter → diggerGain → analyser
+    const filt = ctx.createBiquadFilter();
+    filt.type = 'lowpass';
+    filt.frequency.value = instrParams.digger.filterFreq * 2;
+    filt.Q.value = instrParams.digger.filterQ;
+    src.connect(filt);
+    filt.connect(diggerGain);
+
+    // Fade in
+    const targetVol = 0.15 + state.musicians.digger.complexity * 0.07;
+    diggerGain.gain.cancelScheduledValues(ctx.currentTime);
+    diggerGain.gain.setValueAtTime(diggerGain.gain.value || 0.0001, ctx.currentTime);
+    diggerGain.gain.linearRampToValueAtTime(targetVol, ctx.currentTime + 3);
+
+    src.start();
+    currentDiggerNode = src;
+    diggerMode = 'wiki';
+    currentWikiIdx = idx;
+    setStatus('digger', '▸ ' + entry.label);
+
+    // When it ends (if not looping) — flip to next
+    src.onended = () => {
+      if (state.musicians.digger.playing && diggerMode === 'wiki') flipRecord();
+    };
+
+  } catch(e) {
+    if (e.name === 'AbortError') return; // intentional abort
+    console.warn('Wiki fetch failed:', entry.label, e.message);
+    fallbackToSynth();
+  }
+}
+
+function fallbackToSynth() {
+  diggerMode = 'synth';
+  spawnDiggerTexture();
+}
+
+function flipRecord() {
+  if (!state.musicians.digger.playing) return;
+
+  // 70% chance wiki, 30% synth
+  if (Math.random() < 0.7 && WIKI_CRATE.length > 0) {
+    let next = Math.floor(Math.random() * WIKI_CRATE.length);
+    if (next === currentWikiIdx) next = (next + 1) % WIKI_CRATE.length;
+    // Fade out current
+    if (diggerGain) {
+      diggerGain.gain.cancelScheduledValues(ctx.currentTime);
+      diggerGain.gain.setValueAtTime(diggerGain.gain.value, ctx.currentTime);
+      diggerGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.5);
+    }
+    if (currentDiggerNode) { try { setTimeout(() => { try { currentDiggerNode.stop(); } catch(e){} }, 1600); } catch(e){} }
+    setTimeout(() => tryFetchWikiRecord(next), 800);
+  } else {
+    if (currentDiggerNode) { try { currentDiggerNode.stop(); } catch(e){} }
+    diggerMode = 'synth';
+    spawnDiggerTexture();
+  }
+}
+
+// ---- SYNTH TEXTURE FALLBACK ----
+
+function makeVinylCrackle(dest, dur) {
+  const p = instrParams.digger;
+  const bufSize = ctx.sampleRate * dur;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) {
+    data[i] = Math.random() < p.clickDensity
+      ? (Math.random() - 0.5) * 0.8
+      : (Math.random() - 0.5) * 0.018;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'bandpass';
+  filt.frequency.value = p.filterFreq;
+  filt.Q.value = p.filterQ;
+  src.connect(filt); filt.connect(dest);
+  return src;
+}
+
+function makeRainTexture(dest, dur) {
+  const src = ctx.createBufferSource();
+  const bufSize = ctx.sampleRate * dur;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = (Math.random() - 0.5) * 0.15;
+  src.buffer = buf;
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'lowpass'; filt.frequency.value = 3000;
+  src.connect(filt); filt.connect(dest);
+  return src;
+}
+
+function makeStaticTexture(dest, dur) {
+  const p = instrParams.digger;
+  const src = ctx.createBufferSource();
+  const bufSize = ctx.sampleRate * dur;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let v = 0;
+  for (let i = 0; i < bufSize; i++) { v = v * 0.95 + (Math.random() - 0.5) * 0.2; data[i] = v; }
+  src.buffer = buf;
+  const filt = ctx.createBiquadFilter();
+  filt.type = 'bandpass'; filt.frequency.value = p.filterFreq * 0.6; filt.Q.value = p.filterQ * 1.5;
+  src.connect(filt); filt.connect(dest);
+  return src;
+}
+
+function makeWindTexture(dest, dur) {
+  const src = ctx.createBufferSource();
+  const bufSize = ctx.sampleRate * dur;
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  let v = 0;
+  for (let i = 0; i < bufSize; i++) { v = v * 0.999 + (Math.random() - 0.5) * 0.015; data[i] = v; }
+  src.buffer = buf; src.connect(dest);
+  return src;
+}
+
+function spawnDiggerTexture() {
+  if (!state.musicians.digger.playing) return;
+  const dest = diggerGain || analyserNodes.digger;
+  const dur = 5 + Math.random() * 10;
+  if (currentDiggerNode) { try { currentDiggerNode.stop(); } catch(e){} }
+  const pick = ['vinyl','rain','static','wind','vinyl','vinyl'];
+  const type = pick[Math.floor(Math.random() * pick.length)];
+  let src;
+  switch(type) {
+    case 'rain':   src = makeRainTexture(dest, dur); break;
+    case 'static': src = makeStaticTexture(dest, dur); break;
+    case 'wind':   src = makeWindTexture(dest, dur); break;
+    default:       src = makeVinylCrackle(dest, dur);
+  }
+  if (diggerGain) {
+    const vol = 0.1 + state.musicians.digger.complexity * 0.08;
+    diggerGain.gain.cancelScheduledValues(ctx.currentTime);
+    diggerGain.gain.setValueAtTime(diggerGain.gain.value || 0.0001, ctx.currentTime);
+    diggerGain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 3);
+  }
+  src.start();
+  currentDiggerNode = src;
+  setStatus('digger', type.toUpperCase() + ' ▸ ' + Math.round(dur) + 's');
+}
+
+function startDigger() {
+  if (!diggerGain) {
+    diggerGain = ctx.createGain();
+    diggerGain.gain.value = 0.0001;
+    diggerGain.connect(analyserNodes.digger);
+  }
+  // Try a random wiki record first
+  const idx = Math.floor(Math.random() * WIKI_CRATE.length);
+  tryFetchWikiRecord(idx);
+  // Periodic flip every 30–60s
+  diggerInterval = setInterval(() => {
+    if (state.musicians.digger.playing) flipRecord();
+  }, 30000 + Math.random() * 30000);
+}
+
+function stopDigger() {
+  clearInterval(diggerInterval);
+  diggerInterval = null;
+  if (diggerFetchAbort) { diggerFetchAbort.abort(); diggerFetchAbort = null; }
+  if (diggerGain) {
+    diggerGain.gain.cancelScheduledValues(ctx.currentTime);
+    diggerGain.gain.setValueAtTime(diggerGain.gain.value, ctx.currentTime);
+    diggerGain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 2);
+  }
+  if (currentDiggerNode) {
+    try { currentDiggerNode.stop(ctx.currentTime + 2.1); } catch(e){}
+    currentDiggerNode = null;
+  }
+  currentWikiIdx = -1;
+  diggerMode = 'synth';
+}
+
+
+// ============================================================
+// MUSICIAN CONTROL
+// ============================================================
+function toggleMusician(m) {
+  const ms = state.musicians[m];
+  if (!ms.playing) {
+    startMusician(m);
+  } else {
+    stopMusician(m);
+  }
+}
+
+function startMusician(m) {
+  const ms = state.musicians[m];
+  ms.playing = true;
+  ms.state = 'finding';
+
+  const el = document.getElementById('m-' + m);
+  el.classList.remove('locked');
+  el.classList.add('finding');
+  setStatus(m, '▸ FINDING IT...');
+
+  const btn = document.getElementById('btn-' + m);
+  btn.classList.add('playing');
+  const icon = document.getElementById('icon-' + m);
+
+  // Show stop icon
+  icon.setAttribute('points', '4,4 12,4 12,12 4,12');
+  icon.setAttribute('fill', getAccentColor(m));
+
+  if (!schedulerTimer && m !== 'digger') startScheduler();
+  if (m === 'digger') startDigger();
+
+  // "Finding it" period — brief, one bar
+  const barDur = beatDuration() * beatsPerMeasure() * 1000;
+  setTimeout(() => {
+    if (ms.playing) {
+      ms.state = 'locked';
+      el.classList.remove('finding');
+      el.classList.add('locked');
+      setStatus(m, getLockedStatus(m));
+    }
+  }, barDur);
+}
+
+function stopMusician(m) {
+  const ms = state.musicians[m];
+  ms.playing = false;
+  ms.state = 'off';
+
+  const el = document.getElementById('m-' + m);
+  el.classList.remove('locked', 'finding');
+
+  const btn = document.getElementById('btn-' + m);
+  btn.classList.remove('playing');
+  const icon = document.getElementById('icon-' + m);
+  icon.setAttribute('points', '5,2 14,8 5,14');
+  icon.setAttribute('fill', '#666');
+
+  setStatus(m, '— OFFLINE —');
+  if (m === 'digger') stopDigger();
+  stopSchedulerIfNone();
+}
+
+function getLockedStatus(m) {
+  const statuses = {
+    drums:  '◉ 808 LOCKED',
+    bass:   '◉ SAW ARP LOCKED',
+    keys:   '◉ RHODES LOCKED',
+    digger: '◉ DIGGING...'
+  };
+  return statuses[m];
+}
+
+function getAccentColor(m) {
+  const colors = { drums: '#c8a84b', bass: '#4bc8a8', keys: '#c84b6e', digger: '#7b4bc8' };
+  return colors[m];
+}
+
+function setStatus(m, text) {
+  document.getElementById('status-' + m).textContent = text;
+}
+
+// ============================================================
+// INSTRUMENT PARAMS — live-tweakable sound parameters
+// ============================================================
+const instrParams = {
+  drums: {
+    kickDecay:   0.5,   // 0.2–1.0  — punch vs boom
+    kickPitch:   250,   // × 0.28 = ~70 Hz — solid low thud
+    snareSnap:   0.15,  // 0.05–0.3 — snare decay
+    hatDensity:  0.5,   // 0–1      — offbeat hat probability
+    distAmount:  50,    // 10–200   — waveshaper drive
+  },
+  bass: {
+    detune:      6,     // 2–30 cents total spread between the two saws
+    filterMult:  6,     // 2–12     — lowpass cutoff as multiple of fundamental
+    attackTime:  0.01,  // 0.005–0.08
+    decayShape:  0.7,   // 0.4–0.95 — where gain hold ends (proportion of dur)
+  },
+  keys: {
+    modRatio:    7,     // 1–14     — FM modulator harmonic
+    modDepth:    0.3,   // 0.1–0.8  — FM depth (as fraction of freq)
+    tremRate:    5.5,   // 2–12 Hz
+    tremDepth:   0.05,  // 0.01–0.15
+    noteLength:  1.5,   // 0.8–2.5  — dur multiplier
+  },
+  digger: {
+    filterFreq:  1200,  // 400–6000 — texture filter center
+    filterQ:     0.3,   // 0.1–4
+    clickDensity:0.002, // 0.0005–0.01 — vinyl click probability
+  }
+};
+
+function tweakSound(m) {
+  // Flash button
+  const btn = document.getElementById('tweak-' + m);
+  btn.classList.add('flash');
+  setTimeout(() => btn.classList.remove('flash'), 300);
+
+  const r = (lo, hi) => lo + Math.random() * (hi - lo);
+  const ri = (lo, hi) => Math.floor(lo + Math.random() * (hi - lo + 1));
+
+  if (m === 'drums') {
+    instrParams.drums.kickDecay   = r(0.2, 1.0);
+    instrParams.drums.kickPitch   = r(180, 360); // maps to 50–100 Hz actual
+    instrParams.drums.snareSnap   = r(0.05, 0.3);
+    instrParams.drums.hatDensity  = r(0.1, 0.9);
+    instrParams.drums.distAmount  = r(10, 180);
+    setStatus('drums', '◈ DIALED IN');
+  } else if (m === 'bass') {
+    instrParams.bass.detune       = r(2, 28);
+    instrParams.bass.filterMult   = r(2, 12);
+    instrParams.bass.attackTime   = r(0.005, 0.08);
+    instrParams.bass.decayShape   = r(0.4, 0.92);
+    setStatus('bass', '◈ REPATCHED');
+  } else if (m === 'keys') {
+    instrParams.keys.modRatio     = ri(1, 13);
+    instrParams.keys.modDepth     = r(0.1, 0.75);
+    instrParams.keys.tremRate     = r(2, 12);
+    instrParams.keys.tremDepth    = r(0.01, 0.14);
+    instrParams.keys.noteLength   = r(0.8, 2.4);
+    setStatus('keys', '◈ NEW TONE');
+  } else if (m === 'digger') {
+    instrParams.digger.filterFreq   = r(300, 6000);
+    instrParams.digger.filterQ      = r(0.1, 4);
+    instrParams.digger.clickDensity = r(0.0003, 0.012);
+    flipRecord();
+    setStatus('digger', '◈ REFILTERED');
+  }
+
+  setTimeout(() => {
+    if (state.musicians[m].playing) setStatus(m, getLockedStatus(m));
+  }, 1400);
+}
+
+function reinterpret(m) {
+  // Flash the button
+  const btn = document.getElementById('reint-' + m);
+  btn.classList.add('flash');
+  setTimeout(() => btn.classList.remove('flash'), 400);
+
+  if (m === 'drums') {
+    // Pick from 5 total variants (0-2 = complexity patterns, 3-4 = bonus grooves)
+    state.musicians.drums._rerollIdx = Math.floor(Math.random() * 5);
+    setStatus('drums', '↻ NEW GROOVE');
+    setTimeout(() => {
+      if (state.musicians.drums.playing) setStatus('drums', getLockedStatus('drums'));
+    }, 1200);
+  } else if (m === 'bass') {
+    // Regenerate pattern with extra randomization seed
+    state.musicians.bass._reroll = Math.random();
+    generateBassPatternRandom();
+    setStatus('bass', '↻ NEW LINE');
+    setTimeout(() => {
+      if (state.musicians.bass.playing) setStatus('bass', getLockedStatus('bass'));
+    }, 1200);
+  } else if (m === 'keys') {
+    state.musicians.keys._reroll = Math.random();
+    generateKeysPatternRandom();
+    setStatus('keys', '↻ NEW VOICING');
+    setTimeout(() => {
+      if (state.musicians.keys.playing) setStatus('keys', getLockedStatus('keys'));
+    }, 1200);
+  } else if (m === 'digger') {
+    flipRecord();
+    setStatus('digger', '⊙ FLIPPING...');
+  }
+}
+
+function generateBassPatternRandom() {
+  const c = state.musicians.bass.complexity;
+  const len = beatsPerMeasure();
+  const allDegrees = [0, 1, 2, 3, 4, 5, 6];
+  bassPattern = [];
+  for (let i = 0; i < len; i++) {
+    if (c === 1) {
+      // Sparse — root on 1, maybe a fifth or rest
+      const pick = Math.random();
+      if (i === 0) bassPattern.push(0);
+      else if (pick < 0.3) bassPattern.push(4);
+      else if (pick < 0.5) bassPattern.push(0);
+      else bassPattern.push(-1);
+    } else if (c === 2) {
+      // Walking — pick from lower degrees, occasional rest
+      const pick = Math.random() < 0.8 ? allDegrees[Math.floor(Math.random() * 5)] : -1;
+      bassPattern.push(i === 0 ? 0 : pick);
+    } else {
+      // Complex — all degrees fair game, dense
+      const pick = Math.random() < 0.9 ? allDegrees[Math.floor(Math.random() * allDegrees.length)] : -1;
+      bassPattern.push(i === 0 ? 0 : pick);
+    }
+  }
+}
+
+function generateKeysPatternRandom() {
+  const c = state.musicians.keys.complexity;
+  const len = beatsPerMeasure();
+  keysPattern = [];
+  for (let i = 0; i < len; i++) {
+    const r = Math.random();
+    if (c === 1) {
+      const threshold = i === 0 ? 1 : 0.25;
+      if (r < threshold) {
+        const root = Math.floor(Math.random() * 3);
+        keysPattern.push([root, root+2]);
+      } else keysPattern.push(null);
+    } else if (c === 2) {
+      if (r < 0.55) {
+        const root = Math.floor(Math.random() * 3);
+        keysPattern.push([root, root+2, root+4]);
+      } else keysPattern.push(null);
+    } else {
+      if (r < 0.75) {
+        const root = Math.floor(Math.random() * 4);
+        const extra = Math.random() < 0.5 ? [root+6] : [];
+        keysPattern.push([root, root+2, root+4, ...extra]);
+      } else keysPattern.push(null);
+    }
+  }
+}
+
+function setComplexity(m, level) {
+  state.musicians[m].complexity = level;
+  const btns = document.querySelectorAll(`[data-m="${m}"] .cplx-btn`);
+  btns.forEach((b, i) => b.classList.toggle('active', i+1 === level));
+  // Regenerate patterns
+  if (m === 'bass') generateBassPattern();
+  if (m === 'keys') generateKeysPattern();
+}
+
+function setTimeSig(sig) {
+  const parts = sig.split('/');
+  state.timeSig = { num: parseInt(parts[0]), den: parseInt(parts[1]) };
+  document.querySelectorAll('#timesig-ctrl button').forEach(b => {
+    b.classList.toggle('active', b.textContent === sig);
+  });
+  generateBassPattern();
+  generateKeysPattern();
+}
+
+// ============================================================
+// KNOBS
+// ============================================================
+const knobConfigs = {
+  'knob-tempo':  { min: 60, max: 200, value: 120, valId: 'val-tempo',  fmt: v => Math.round(v), onChange: v => { state.tempo = v; } },
+  'knob-swing':  { min: 0, max: 1, value: 0.5, valId: 'val-swing', fmt: v => Math.round(v*100)+'%', onChange: v => { state.swing = v; } },
+};
+
+function initKnobs() {
+  Object.entries(knobConfigs).forEach(([id, cfg]) => {
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    drawKnob(canvas, cfg);
+    makeKnobInteractive(canvas, cfg);
+  });
+}
+
+function drawKnob(canvas, cfg) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 72 * dpr; canvas.height = 72 * dpr;
+  canvas.style.width = '36px'; canvas.style.height = '36px';
+  const ctx2 = canvas.getContext('2d');
+  ctx2.scale(dpr, dpr);
+
+  const cx = 18, cy = 18, r = 14;
+  const startAngle = Math.PI * 0.75;
+  const endAngle = Math.PI * 2.25;
+  const t = (cfg.value - cfg.min) / (cfg.max - cfg.min);
+  const angle = startAngle + t * (endAngle - startAngle);
+
+  ctx2.clearRect(0, 0, 36, 36);
+
+  // Track
+  ctx2.beginPath();
+  ctx2.arc(cx, cy, r, startAngle, endAngle);
+  ctx2.strokeStyle = '#222';
+  ctx2.lineWidth = 3;
+  ctx2.lineCap = 'round';
+  ctx2.stroke();
+
+  // Value arc
+  ctx2.beginPath();
+  ctx2.arc(cx, cy, r, startAngle, angle);
+  ctx2.strokeStyle = '#c8a84b';
+  ctx2.lineWidth = 3;
+  ctx2.stroke();
+
+  // Pointer
+  ctx2.beginPath();
+  ctx2.moveTo(cx, cy);
+  ctx2.lineTo(cx + Math.cos(angle) * r * 0.7, cy + Math.sin(angle) * r * 0.7);
+  ctx2.strokeStyle = '#e8e0cc';
+  ctx2.lineWidth = 1.5;
+  ctx2.stroke();
+
+  // Update value display
+  document.getElementById(cfg.valId).textContent = cfg.fmt(cfg.value);
+}
+
+function makeKnobInteractive(canvas, cfg) {
+  let startY, startVal;
+
+  const onStart = (y) => { startY = y; startVal = cfg.value; };
+  const onMove = (y) => {
+    const delta = (startY - y) / 120;
+    cfg.value = Math.max(cfg.min, Math.min(cfg.max, startVal + delta * (cfg.max - cfg.min)));
+    cfg.onChange(cfg.value);
+    drawKnob(canvas, cfg);
+  };
+
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); onStart(e.touches[0].clientY); }, { passive: false });
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientY); }, { passive: false });
+  canvas.addEventListener('mousedown', e => { onStart(e.clientY);
+    const mm = ev => onMove(ev.clientY);
+    const mu = () => { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); };
+    window.addEventListener('mousemove', mm);
+    window.addEventListener('mouseup', mu);
+  });
+}
+
+// ============================================================
+// VISUALS
+// ============================================================
+function startVisuals() {
+  requestAnimationFrame(visualLoop);
+}
+
+const waveBuffers = {};
+
+function visualLoop() {
+  requestAnimationFrame(visualLoop);
+
+  ['drums','bass','keys','digger'].forEach(m => {
+    const analyser = analyserNodes[m];
+    if (!analyser) return;
+
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteTimeDomainData(data);
+
+    // VU
+    let rms = 0;
+    for (let i = 0; i < data.length; i++) {
+      const s = (data[i] - 128) / 128;
+      rms += s * s;
+    }
+    rms = Math.sqrt(rms / data.length);
+    const vu = document.getElementById('vu-' + m);
+    if (vu && state.musicians[m].playing) {
+      vu.style.height = Math.min(100, rms * 600) + '%';
+    } else if (vu) {
+      vu.style.height = '0%';
+    }
+
+    // Waveform
+    const wc = document.getElementById('wave-' + m);
+    if (wc && state.musicians[m].playing) {
+      const dpr = window.devicePixelRatio || 1;
+      const w = wc.offsetWidth, h = wc.offsetHeight;
+      if (w === 0) return;
+      wc.width = w * dpr; wc.height = h * dpr;
+      const c2 = wc.getContext('2d');
+      c2.scale(dpr, dpr);
+      c2.clearRect(0, 0, w, h);
+      c2.beginPath();
+      c2.strokeStyle = getAccentColor(m);
+      c2.lineWidth = 1;
+      for (let i = 0; i < data.length; i++) {
+        const x = i / data.length * w;
+        const y = ((data[i] - 128) / 128) * (h/2) + h/2;
+        i === 0 ? c2.moveTo(x, y) : c2.lineTo(x, y);
+      }
+      c2.stroke();
+    }
+  });
+}
+</script>
+</body>
+</html>
